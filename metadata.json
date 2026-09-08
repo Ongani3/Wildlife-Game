@@ -1,0 +1,6 @@
+{
+  "name": "Luangwa Legends – Zambian Wildlife Safari Quiz",
+  "description": "Mobile-first Progressive Web App safari quiz exploring Zambian wildlife, national parks, and conservation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

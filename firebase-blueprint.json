@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "Question": {
+      "title": "Question",
+      "description": "Educational safari quiz question about Zambian wildlife, national parks, and conservation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "region": { "type": "string", "maxLength": 64 },
+        "questionText": { "type": "string", "maxLength": 500 },
+        "type": { "type": "string", "enum": ["multiple-choice", "true-false", "photo-id"] },
+        "options": { "type": "array" },
+        "correctAnswer": { "type": "string", "maxLength": 200 },
+        "funFact": { "type": "string", "maxLength": 1000 },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "category": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "region", "questionText", "type", "options", "correctAnswer", "funFact", "difficulty"]
+    },
+    "Score": {
+      "title": "Score",
+      "description": "Player quiz round outcome submitted to the global leaderboard.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "score": { "type": "number" },
+        "accuracy": { "type": "number" },
+        "region": { "type": "string", "maxLength": 64 },
+        "isDaily": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "displayName", "score", "accuracy", "region"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User game progress, statistics, badges, and unlocked regions.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "totalQuizzesPlayed": { "type": "number" },
+        "highestScore": { "type": "number" },
+        "highestStreak": { "type": "number" },
+        "unlockedBadges": { "type": "array" },
+        "unlockedRegions": { "type": "array" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName"]
+    }
+  },
+  "firestore": {
+    "/questions/{questionId}": {
+      "schema": "Question",
+      "description": "Public bank of questions maintained by safari educators/curators."
+    },
+    "/scores/{scoreId}": {
+      "schema": "Score",
+      "description": "Global leaderboard submissions with player scores and verified accuracy."
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile with badge collection and personal records."
+    }
+  }
+}

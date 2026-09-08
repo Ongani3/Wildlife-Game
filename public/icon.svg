@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#143622"/>
+      <stop offset="60%" stop-color="#1B4D31"/>
+      <stop offset="100%" stop-color="#24643F"/>
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="chitengePattern" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+      <path d="M0 10 L10 0 L20 10 L10 20 Z" fill="#ffffff" fill-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded squircle -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <rect width="512" height="512" rx="112" fill="url(#chitengePattern)"/>
+
+  <!-- Golden African Safari Sun -->
+  <circle cx="256" cy="240" r="140" fill="url(#sunGrad)" opacity="0.95"/>
+
+  <!-- Distant Luangwa Valley Earth / Horizon -->
+  <path d="M40 370 Q160 330 256 345 T472 370 L472 472 Q472 472 400 472 L112 472 Q40 472 40 400 Z" fill="#8B4513" opacity="0.3"/>
+  <path d="M40 395 Q140 365 256 375 T472 395 L472 472 L40 472 Z" fill="#5C2E0B" opacity="0.6"/>
+
+  <!-- Acacia Silhouette -->
+  <path d="M120 400 C125 360 135 340 145 320 C130 318 110 310 95 295 C85 305 65 308 55 298 C75 285 105 285 125 292 C135 280 150 275 170 282 C185 270 215 272 230 288 C215 298 190 295 175 302 C165 322 155 355 150 400 Z" fill="#0D2316"/>
+
+  <!-- Majestic African Fish Eagle in Flight (Zambian National Symbol) -->
+  <g transform="translate(180, 110) scale(0.65)">
+    <!-- Body & Wings in flight silhouette with golden highlight -->
+    <path d="M110 90 Q60 50 10 70 Q-50 90 -100 80 Q-40 110 20 120 Q60 130 95 110 L95 140 Q105 160 125 150 Q115 130 120 105 Q150 125 200 130 Q270 125 330 90 Q270 95 215 80 Q165 65 115 90 Z" fill="#F8FAFC"/>
+    <path d="M95 110 Q110 140 115 175 Q125 180 135 165 Q130 135 125 105 Z" fill="#D97706"/>
+    <!-- Wings feathers feather tips -->
+    <path d="M-80 82 Q-40 100 5 112 Q-20 125 -60 110 Z" fill="#0D2316"/>
+    <path d="M310 93 Q255 105 195 118 Q230 130 280 115 Z" fill="#0D2316"/>
+    <!-- Eagle white head and golden hooked beak -->
+    <circle cx="112" cy="85" r="18" fill="#F8FAFC"/>
+    <path d="M125 82 Q138 84 135 93 Q128 92 122 88 Z" fill="#F59E0B"/>
+  </g>
+
+  <!-- Elegant Decorative Border Accent (Zambia Sunset Gold) -->
+  <rect x="24" y="24" width="464" height="464" rx="88" fill="none" stroke="#F59E0B" stroke-width="4" stroke-opacity="0.35"/>
+  <circle cx="256" cy="460" r="4" fill="#F59E0B"/>
+  <circle cx="236" cy="460" r="3" fill="#F59E0B" opacity="0.6"/>
+  <circle cx="276" cy="460" r="3" fill="#F59E0B" opacity="0.6"/>
+</svg>

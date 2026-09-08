@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Common helper primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Questions validation: Public educational content can be read by anyone (or offline-synced)
+    function isValidQuestion(data) {
+      return data.id is string && data.id.size() <= 128 &&
+             data.region is string && data.region.size() <= 64 &&
+             data.questionText is string && data.questionText.size() <= 500 &&
+             data.type in ['multiple-choice', 'true-false', 'photo-id'] &&
+             data.options is list && data.options.size() >= 2 && data.options.size() <= 6 &&
+             data.correctAnswer is string && data.correctAnswer.size() <= 200 &&
+             data.funFact is string && data.funFact.size() <= 1000 &&
+             data.difficulty in ['easy', 'medium', 'hard'];
+    }
+
+    match /questions/{questionId} {
+      allow get, list: if true; // Public read for all quiz takers
+      allow create, update, delete: if false; // Admin curated, client cannot mutate question bank directly
+    }
+
+    // Scores validation: Only authenticated users (anonymous or registered) can submit valid scores
+    function isValidScore(data) {
+      return data.userId == request.auth.uid &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.score is number && data.score >= 0 && data.score <= 100000 &&
+             data.accuracy is number && data.accuracy >= 0 && data.accuracy <= 100 &&
+             data.region is string && data.region.size() <= 64 &&
+             data.createdAt == request.time;
+    }
+
+    match /scores/{scoreId} {
+      allow get: if isValidId(scoreId);
+      allow list: if true; // Global leaderboard read
+      allow create: if isValidId(scoreId) &&
+                       isSignedIn() &&
+                       isValidScore(incoming());
+      allow update, delete: if false; // Scores are immutable records once recorded
+    }
+
+    // User Profile validation
+    function isValidProfile(data) {
+      return data.uid == request.auth.uid &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.totalQuizzesPlayed is number && data.totalQuizzesPlayed >= 0 &&
+             data.highestScore is number && data.highestScore >= 0 &&
+             data.highestStreak is number && data.highestStreak >= 0 &&
+             data.unlockedBadges is list && data.unlockedBadges.size() <= 50 &&
+             data.unlockedRegions is list && data.unlockedRegions.size() <= 10 &&
+             data.updatedAt == request.time;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if false; // Prevent user table scraping
+      allow create: if isValidId(userId) &&
+                       isOwner(userId) &&
+                       isValidProfile(incoming());
+      allow update: if isValidId(userId) &&
+                       isOwner(userId) &&
+                       incoming().uid == existing().uid &&
+                       isValidProfile(incoming());
+      allow delete: if isValidId(userId) && isOwner(userId);
+    }
+  }
+}
