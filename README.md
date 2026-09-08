@@ -78,7 +78,13 @@ Deploy rules via Firebase CLI:
 firebase deploy --only firestore:rules
 ```
 
-### 3. Build & Deploy to Firebase Hosting
+### 3. Deploy to GitHub Pages (Automatic)
+Push your code to GitHub on `main` or `master`. The pre-configured `.github/workflows/deploy.yml` workflow will automatically build and publish the app! In your GitHub repository:
+1. Go to **Settings** > **Pages**
+2. Under **Build and deployment > Source**, select **GitHub Actions**
+3. That's it! Your site will be live at `https://<username>.github.io/<repo-name>/`.
+
+### 4. Build & Deploy to Firebase Hosting (Optional)
 ```bash
 npm run build
 firebase deploy --only hosting
