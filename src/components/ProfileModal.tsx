@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   RotateCcw,
   Sparkles,
+  AlertCircle,
 } from 'lucide-react';
 
 interface ProfileModalProps {
@@ -157,6 +158,23 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             <p>
               Zambia is home to 20 National Parks and 36 Game Management Areas spanning over 30% of the country. Every quiz you take helps raise awareness for frontline conservation initiatives!
             </p>
+          </div>
+
+          {/* Support & Problem Reporting */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 border border-stone-200 text-xs">
+            <div>
+              <p className="font-bold text-stone-800">Need help or spotted a bug?</p>
+              <p className="text-[11px] text-stone-500">Contact the developer team directly.</p>
+            </div>
+            <a
+              id="profile-report-problem-btn"
+              href="mailto:zuluongani@gmail.com?subject=Luangwa%20Legends%20App%20-%20Problem%20Report&body=Hello%20Ongani%2C%0A%0AI%20would%20like%20to%20report%20a%20problem%20with%20the%20Luangwa%20Legends%20app%3A%0A%0A%5BPlease%20describe%20the%20issue%20here%5D"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1b4d31] hover:bg-[#143622] active:scale-95 text-amber-300 font-semibold text-xs shadow-2xs transition shrink-0"
+              title="Send email to zuluongani@gmail.com"
+            >
+              <AlertCircle className="w-3.5 h-3.5" />
+              <span>Report Problem</span>
+            </a>
           </div>
 
           {/* Danger zone: reset progress */}

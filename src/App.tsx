@@ -22,6 +22,7 @@ import {
   Compass,
   Trees,
   Home,
+  AlertCircle,
 } from 'lucide-react';
 
 export default function App() {
@@ -320,6 +321,35 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* App Footer */}
+      <footer
+        id="app-footer"
+        className="mt-auto border-t border-stone-200/80 bg-stone-100/70 py-4 px-4 text-xs text-stone-600"
+      >
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-center sm:text-left">
+            <p className="font-semibold text-stone-700">
+              Copyright © {new Date().getFullYear()} Ongani Clement Zulu and Milton Zachary Mizinga
+            </p>
+            <p className="text-[11px] text-stone-500 mt-0.5">
+              Luangwa Legends · Zambia Wildlife & Conservation Safari Quiz
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              id="report-problem-btn"
+              href="mailto:zuluongani@gmail.com?subject=Luangwa%20Legends%20App%20-%20Problem%20Report&body=Hello%20Ongani%2C%0A%0AI%20would%20like%20to%20report%20a%20problem%20with%20the%20Luangwa%20Legends%20app%3A%0A%0A%5BPlease%20describe%20the%20issue%20here%5D"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-200/80 hover:bg-stone-300 active:scale-95 text-stone-700 hover:text-stone-900 font-semibold text-xs border border-stone-300 transition shadow-2xs"
+              title="Report an issue to zuluongani@gmail.com"
+            >
+              <AlertCircle className="w-3.5 h-3.5 text-amber-700" />
+              <span>Report a Problem</span>
+            </a>
+          </div>
+        </div>
+      </footer>
 
       {/* Persistent Offline Status Indicator */}
       <OfflineIndicator />
