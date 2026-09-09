@@ -1,6 +1,18 @@
 import { Question } from '../types';
 
-export const STARTER_QUESTIONS: Question[] = [
+// Helper to ensure options are never statically in option A position
+function shuffleStaticOptions<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = a[i];
+    a[i] = a[j];
+    a[j] = tmp;
+  }
+  return a;
+}
+
+const RAW_QUESTIONS: Question[] = [
   // --- SOUTH LUANGWA NATIONAL PARK ---
   {
     id: 'sl-01',
@@ -65,10 +77,10 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'Why do hippos in the Luangwa River congregate in such immense pods during the dry season (September–October)?',
     type: 'multiple-choice',
     options: [
-      'The river shrinks into deep oxbow pools and deep channels',
-      'To breed together for only one week',
       'To defend against crocodile migration',
-      'To shelter from bushfires'
+      'To shelter from bushfires',
+      'The river shrinks into deep oxbow pools and deep channels',
+      'To breed together for only one week'
     ],
     correctAnswer: 'The river shrinks into deep oxbow pools and deep channels',
     funFact: "The Luangwa River hosts up to 50 hippos per kilometer! As seasonal waters recede, hundreds squeeze into surviving oxbow lagoons.",
@@ -82,10 +94,10 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'Which community conservation initiative based in Mfuwe trains local village scouts and runs snare-removal patrols in South Luangwa?',
     type: 'multiple-choice',
     options: [
+      'African Safari Trust',
       'Conservation South Luangwa (CSL)',
       'Zambian Forestry Board',
-      'Savannah Watch UK',
-      'African Safari Trust'
+      'Savannah Watch UK'
     ],
     correctAnswer: 'Conservation South Luangwa (CSL)',
     funFact: 'CSL works hand-in-hand with the Department of National Parks & Wildlife (DNPW), removing thousands of wire snares and deploying anti-poaching canine units.',
@@ -95,11 +107,11 @@ export const STARTER_QUESTIONS: Question[] = [
   {
     id: 'sl-08',
     region: 'south-luangwa',
-    questionText: 'True or False: Crawshay’s zebra, found in South Luangwa, differs from southern plains zebras by having narrower stripes and no shadow stripes.',
+    questionText: 'True or False: Crawshay’s zebra can be identified by the faint brownish shadow stripes between its main black stripes.',
     type: 'true-false',
     options: ['True', 'False'],
-    correctAnswer: 'True',
-    funFact: 'Crawshay’s zebra stripes extend all the way down to its hooves with crisp black and white contrast and zero faint brown shadow stripes.',
+    correctAnswer: 'False',
+    funFact: 'False! Unlike southern Chapman’s zebras, Crawshay’s zebra has zero shadow stripes and bold, crisp black bands that continue unbroken down to the hooves.',
     difficulty: 'hard',
     category: 'mammals',
   },
@@ -111,10 +123,10 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'What famous behavior do lions on the Busanga Plains in northern Kafue regularly exhibit?',
     type: 'multiple-choice',
     options: [
-      'Climbing giant Sycamore fig trees',
       'Diving underwater to catch catfish',
-      'Hunting exclusively in packs of 40',
-      'Adopting abandoned leopard cubs'
+      'Adopting abandoned leopard cubs',
+      'Climbing giant Sycamore fig trees',
+      'Hunting exclusively in packs of 40'
     ],
     correctAnswer: 'Climbing giant Sycamore fig trees',
     funFact: 'Busanga lions climb trees to escape morning dew on the plains, avoid biting tsetse flies, and gain panoramic vantage points over prey.',
@@ -139,9 +151,9 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'How large is Kafue National Park compared to other protected reserves in Zambia?',
     type: 'multiple-choice',
     options: [
-      'It is Zambia’s largest national park (approx. 22,400 km²)',
-      'It is the smallest national park',
       'It is roughly the same size as Victoria Falls park',
+      'It is the smallest national park',
+      'It is Zambia’s largest national park (approx. 22,400 km²)',
       'It was decommissioned in 1990'
     ],
     correctAnswer: 'It is Zambia’s largest national park (approx. 22,400 km²)',
@@ -164,11 +176,11 @@ export const STARTER_QUESTIONS: Question[] = [
   {
     id: 'kf-05',
     region: 'kafue',
-    questionText: 'True or False: Unlike South Luangwa, Kafue National Park is home to healthy populations of cheetahs on its vast open plains.',
+    questionText: 'True or False: South Luangwa National Park is Zambia’s premier sanctuary for wild cheetahs.',
     type: 'true-false',
     options: ['True', 'False'],
-    correctAnswer: 'True',
-    funFact: 'The open expanses of Busanga Plains and Nanzhila in Kafue provide ideal sprint territory for cheetahs, which are absent in the rugged terrain of South Luangwa.',
+    correctAnswer: 'False',
+    funFact: 'False! Cheetahs are absent from the dense riverine woodlands of South Luangwa. Zambia’s cheetah stronghold is Kafue National Park, especially the vast Busanga Plains.',
     difficulty: 'medium',
     category: 'mammals',
   },
@@ -224,10 +236,10 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'In local Tonga and Goba folklore, who is "Nyami Nyami"?',
     type: 'multiple-choice',
     options: [
-      'The dragon-headed River God of the Zambezi',
       'The spirit of the African Baobab tree',
       'A mythical leopard that speaks to elders',
-      'The guardian spirit of Victoria Falls'
+      'The guardian spirit of Victoria Falls',
+      'The dragon-headed River God of the Zambezi'
     ],
     correctAnswer: 'The dragon-headed River God of the Zambezi',
     funFact: 'Nyami Nyami has the body of a serpent and head of a fish. Tradition says the construction of Kariba Dam separated him from his wife, causing catastrophic 1957 floods.',
@@ -346,10 +358,10 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'Every November, Kasanka National Park in northern Zambia hosts the world’s largest mammal migration by numbers. Which animal is it?',
     type: 'multiple-choice',
     options: [
-      'Straw-coloured Fruit Bats (~10 million individuals)',
       'Blue Wildebeest (~2 million)',
       'Zebras (~500,000)',
-      'Elephant shrews (~5 million)'
+      'Elephant shrews (~5 million)',
+      'Straw-coloured Fruit Bats (~10 million individuals)'
     ],
     correctAnswer: 'Straw-coloured Fruit Bats (~10 million individuals)',
     funFact: 'Over 10 million fruit bats converge on a tiny patch of evergreen swamp forest (Musitu) in Kasanka to gorge on ripe wild loquats and waterberries.',
@@ -385,10 +397,10 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'What is the legendary story of "Lady Liuwa" in Liuwa Plain National Park?',
     type: 'multiple-choice',
     options: [
-      'A solitary lioness who survived alone for years as the last lion on the plain before pride restoration',
-      'An elephant matriarch who lived to age 85',
+      'A cheetah that adopted orphaned gazelles',
       'A mythical leopard worshipped by the Lozi king',
-      'A cheetah that adopted orphaned gazelles'
+      'An elephant matriarch who lived to age 85',
+      'A solitary lioness who survived alone for years as the last lion on the plain before pride restoration'
     ],
     correctAnswer: 'A solitary lioness who survived alone for years as the last lion on the plain before pride restoration',
     funFact: 'Lady Liuwa sought human company around ranger campfires for companionship until male lions were reintroduced in 2009. She lived to a grand old age.',
@@ -413,10 +425,10 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'How does the Greater Honeyguide bird interact with human hunters in Zambian tradition and ecology?',
     type: 'multiple-choice',
     options: [
+      'It catches flies around campsite cooking fires',
       'It calls and guides humans directly to wild bee hives in exchange for wax and larvae',
       'It warns villagers of approaching lions',
-      'It helps herd cattle across rivers',
-      'It catches flies around campsite cooking fires'
+      'It helps herd cattle across rivers'
     ],
     correctAnswer: 'It calls and guides humans directly to wild bee hives in exchange for wax and larvae',
     funFact: 'This is one of nature’s rare cooperative partnerships between wild animals and humans. Legend warns that if you don’t leave honey for the bird, it leads you to a snake!',
@@ -463,10 +475,10 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'What is the primary objective of community "Anti-Snare Campaigns" led by conservation groups across Zambia?',
     type: 'multiple-choice',
     options: [
-      'Locating and confiscating wire snares set in the bush to rescue maimed wildlife',
-      'Fencing entire national parks with electric walls',
       'Relocating all predators to private zoos',
-      'Preventing birds from migrating north'
+      'Preventing birds from migrating north',
+      'Locating and confiscating wire snares set in the bush to rescue maimed wildlife',
+      'Fencing entire national parks with electric walls'
     ],
     correctAnswer: 'Locating and confiscating wire snares set in the bush to rescue maimed wildlife',
     funFact: 'Wire snares set for bushmeat indiscriminately catch lions, leopards, and elephants. Veterinary teams dart snared animals in the field to remove wire and treat wounds.',
@@ -487,11 +499,11 @@ export const STARTER_QUESTIONS: Question[] = [
   {
     id: 'az-13',
     region: 'all-zambia',
-    questionText: 'True or False: Nile crocodiles in the Zambezi River can survive for months without food by slowing their metabolism to a bare minimum.',
+    questionText: 'True or False: Nile crocodiles in the Zambezi River are warm-blooded reptiles that must feed every 24 hours to survive.',
     type: 'true-false',
     options: ['True', 'False'],
-    correctAnswer: 'True',
-    funFact: 'As cold-blooded reptiles with an efficient heart, large Nile crocodiles can survive up to a year between major feasts when food is scarce.',
+    correctAnswer: 'False',
+    funFact: 'False! Nile crocodiles are ectothermic (cold-blooded) reptiles. With their extraordinarily slow metabolism, large adults can survive up to a full year between meals.',
     difficulty: 'medium',
     category: 'mammals',
   },
@@ -524,8 +536,8 @@ export const STARTER_QUESTIONS: Question[] = [
     questionText: 'What is the name of Zambia’s wildlife authority responsible for managing national parks and game management areas (GMAs)?',
     type: 'multiple-choice',
     options: [
-      'Department of National Parks and Wildlife (DNPW)',
       'Zambian Safari Police (ZSP)',
+      'Department of National Parks and Wildlife (DNPW)',
       'Ministry of Bushcraft',
       'Royal Wildlife Protection Unit'
     ],
@@ -548,12 +560,22 @@ export const STARTER_QUESTIONS: Question[] = [
   {
     id: 'az-18',
     region: 'all-zambia',
-    questionText: 'True or False: Pangolins, found in Zambia’s woodlands, are the only mammals in the world covered entirely in protective keratin scales.',
+    questionText: 'True or False: Ground pangolins are egg-laying reptiles closely related to armadillos.',
     type: 'true-false',
     options: ['True', 'False'],
-    correctAnswer: 'True',
-    funFact: 'When threatened, the ground pangolin rolls into a tight impenetrable ball. Zambia enforces strict multi-year prison sentences for illegal trafficking of pangolins.',
+    correctAnswer: 'False',
+    funFact: 'False! Pangolins are true placental mammals that give birth to live pups. They are the only mammals on Earth completely covered in protective keratin scales.',
     difficulty: 'easy',
     category: 'conservation',
   },
 ];
+
+export const STARTER_QUESTIONS: Question[] = RAW_QUESTIONS.map((q) => {
+  if (q.type === 'true-false') {
+    return { ...q, options: ['True', 'False'] };
+  }
+  return {
+    ...q,
+    options: shuffleStaticOptions(q.options),
+  };
+});

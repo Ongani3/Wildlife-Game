@@ -58,6 +58,18 @@ function pseudoRandom(seed: number) {
   return x - Math.floor(x);
 }
 
+// Fisher-Yates array shuffler
+function shuffleArray<T>(items: T[], rng: () => number = Math.random): T[] {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+  }
+  return arr;
+}
+
 export const useQuizStore = create<QuizStore>()(
   persist(
     (set, get) => ({
@@ -132,11 +144,38 @@ export const useQuizStore = create<QuizStore>()(
             seed++;
             return r - 0.5;
           });
-          selectedQuestions = shuffled.slice(0, 10);
+          const picked = shuffled.slice(0, 10);
+
+          // Deterministically randomize option placement for each question
+          selectedQuestions = picked.map((q) => {
+            if (q.type === 'true-false') {
+              return { ...q, options: ['True', 'False'] };
+            }
+            const dailyRng = () => {
+              const r = pseudoRandom(seed);
+              seed++;
+              return r;
+            };
+            return {
+              ...q,
+              options: shuffleArray(q.options, dailyRng),
+            };
+          });
         } else {
           // Standard random round
           const shuffled = pool.sort(() => 0.5 - Math.random());
-          selectedQuestions = shuffled.slice(0, 10);
+          const picked = shuffled.slice(0, 10);
+
+          // Randomize option placements so the correct answer distributes evenly across A, B, C, D
+          selectedQuestions = picked.map((q) => {
+            if (q.type === 'true-false') {
+              return { ...q, options: ['True', 'False'] };
+            }
+            return {
+              ...q,
+              options: shuffleArray(q.options, Math.random),
+            };
+          });
         }
 
         set({
