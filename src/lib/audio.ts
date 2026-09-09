@@ -83,6 +83,10 @@ class SoundEngine {
     osc.stop(now + 0.3);
   }
 
+  public playIncorrect() {
+    this.playWrong();
+  }
+
   // Celebratory safari streak drum & chime for streaks >= 3
   public playStreak(streak: number) {
     const ctx = this.getContext();

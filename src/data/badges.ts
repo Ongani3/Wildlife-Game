@@ -85,4 +85,28 @@ export const BADGES: SafariBadge[] = [
     iconName: 'Trophy',
     unlockRequirement: 'Score over 2,500 points in All Zambia mode',
   },
+  {
+    id: 'sharp-eyes',
+    name: 'Sharp Eyes',
+    description: 'Spotted all hidden differences in a Zambian wilderness visual safari puzzle.',
+    category: 'master',
+    iconName: 'Eye',
+    unlockRequirement: 'Complete a Spot the Difference puzzle',
+  },
+  {
+    id: 'memory-master',
+    name: 'Memory Master',
+    description: 'Demonstrated photographic bush instinct by matching all animal pairs in record time.',
+    category: 'master',
+    iconName: 'Brain',
+    unlockRequirement: 'Complete an Animal Memory Match puzzle',
+  },
+  {
+    id: 'luangwa-pathfinder',
+    name: 'Luangwa Pathfinder',
+    description: 'Mastered 3 or more Zambian wildlife interactive puzzles across the reserves.',
+    category: 'conservation',
+    iconName: 'Footprints',
+    unlockRequirement: 'Complete 3 safari wildlife puzzles',
+  },
 ];

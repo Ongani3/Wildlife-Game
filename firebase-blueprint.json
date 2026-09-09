@@ -47,15 +47,38 @@
         "highestStreak": { "type": "number" },
         "unlockedBadges": { "type": "array" },
         "unlockedRegions": { "type": "array" },
+        "completedPuzzles": { "type": "array" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "displayName"]
+    },
+    "Puzzle": {
+      "title": "Puzzle",
+      "description": "Interactive Zambian wildlife puzzle (Memory Match or Spot the Difference).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "type": { "type": "string", "enum": ["memory-match", "spot-difference"] },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] },
+        "parkRegion": { "type": "string", "maxLength": 64 },
+        "description": { "type": "string", "maxLength": 500 },
+        "funFact": { "type": "string", "maxLength": 1000 },
+        "badgeRewardId": { "type": "string", "maxLength": 128 },
+        "bonusPoints": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "type", "difficulty", "parkRegion", "description", "funFact", "bonusPoints"]
     }
   },
   "firestore": {
     "/questions/{questionId}": {
       "schema": "Question",
       "description": "Public bank of questions maintained by safari educators/curators."
+    },
+    "/puzzles/{puzzleId}": {
+      "schema": "Puzzle",
+      "description": "Public bank of wildlife puzzles updated dynamically in Firestore."
     },
     "/scores/{scoreId}": {
       "schema": "Score",

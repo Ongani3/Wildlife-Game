@@ -6,9 +6,13 @@ import { ResultsView } from './components/ResultsView';
 import { BadgeModal } from './components/BadgeModal';
 import { LeaderboardView } from './components/LeaderboardView';
 import { ProfileModal } from './components/ProfileModal';
+import { MemoryMatchGame } from './components/puzzles/MemoryMatchGame';
+import { SpotDifferenceGame } from './components/puzzles/SpotDifferenceGame';
+import { PuzzleHubModal } from './components/puzzles/PuzzleHubModal';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { OfflineIndicator } from './components/OfflineIndicator';
-import { RegionId } from './types';
+import { RegionId, Puzzle } from './types';
+import { STARTER_PUZZLES } from './data/puzzles';
 import {
   Volume2,
   VolumeX,
@@ -23,6 +27,9 @@ import {
   Trees,
   Home,
   AlertCircle,
+  Puzzle as PuzzleIcon,
+  Brain,
+  Eye,
 } from 'lucide-react';
 
 export default function App() {
@@ -30,7 +37,8 @@ export default function App() {
     user,
     soundMuted,
     activeRound,
-    localLeaderboard,
+    activePuzzle,
+    bonusPuzzleEligible,
     newUnlockedBadgeId,
     startRound,
     submitAnswer,
@@ -39,19 +47,25 @@ export default function App() {
     toggleSound,
     setDisplayName,
     resetProgress,
+    startPuzzle,
+    exitPuzzle,
+    dismissBonusPuzzlePrompt,
   } = useQuizStore();
 
   const [selectedRegion, setSelectedRegion] = useState<RegionId>('south-luangwa');
   const [showBadges, setShowBadges] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showPuzzleHub, setShowPuzzleHub] = useState(false);
 
   // Return to home screen and close any open modals
   const handleGoHome = () => {
     quitRound();
+    exitPuzzle();
     setShowBadges(false);
     setShowLeaderboard(false);
     setShowProfile(false);
+    setShowPuzzleHub(false);
   };
 
   // Daily Challenge check
@@ -64,6 +78,27 @@ export default function App() {
 
   const handleStartDailyChallenge = () => {
     startRound('all-zambia', 'daily');
+  };
+
+  // Trigger bonus puzzle
+  const handleStartBonusPuzzle = () => {
+    dismissBonusPuzzlePrompt();
+    // Pick an uncompleted puzzle or random starter puzzle
+    const uncompleted = STARTER_PUZZLES.filter(
+      (p) => !user.completedPuzzles?.includes(p.id)
+    );
+    const chosen =
+      uncompleted.length > 0
+        ? uncompleted[Math.floor(Math.random() * uncompleted.length)]
+        : STARTER_PUZZLES[Math.floor(Math.random() * STARTER_PUZZLES.length)];
+    startPuzzle(chosen);
+  };
+
+  const handleNextPuzzle = () => {
+    if (!activePuzzle) return;
+    const currentIndex = STARTER_PUZZLES.findIndex((p) => p.id === activePuzzle.id);
+    const nextIndex = (currentIndex + 1) % STARTER_PUZZLES.length;
+    startPuzzle(STARTER_PUZZLES[nextIndex]);
   };
 
   return (
@@ -114,15 +149,32 @@ export default function App() {
               aria-label="Return to Home Screen"
               title="Return to Home Screen"
               className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition flex items-center gap-1.5 font-bold text-xs ${
-                activeRound
+                activeRound || activePuzzle
                   ? 'bg-amber-500 text-stone-950 shadow-md hover:bg-amber-400 active:scale-98 animate-pulse sm:animate-none'
-                  : !showBadges && !showLeaderboard && !showProfile
+                  : !showBadges && !showLeaderboard && !showProfile && !showPuzzleHub
                   ? 'bg-white/15 text-amber-300 border border-amber-400/30'
                   : 'text-stone-300 hover:text-white hover:bg-white/10'
               }`}
             >
               <Home className="w-4 h-4" />
               <span className="text-xs">Home</span>
+            </button>
+
+            {/* Bush Puzzles Standalone Entry */}
+            <button
+              id="open-puzzles-hub-btn"
+              onClick={() => setShowPuzzleHub(true)}
+              aria-label="Safari Bush Puzzles"
+              className="relative p-2 rounded-xl text-stone-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1"
+              title="Wildlife Bush Puzzles"
+            >
+              <PuzzleIcon className="w-4 h-4 text-amber-300" />
+              <span className="text-xs font-bold hidden md:inline text-amber-200">Puzzles</span>
+              {(user.completedPuzzles?.length || 0) > 0 && (
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-emerald-500 text-stone-950 font-black text-[9px] shadow-xs">
+                  {user.completedPuzzles?.length}
+                </span>
+              )}
             </button>
 
             {/* PWA Install Button */}
@@ -159,13 +211,13 @@ export default function App() {
               )}
             </button>
 
-            {/* Leaderboard Button */}
+            {/* Online Leaderboard Button */}
             <button
               id="open-leaderboard-btn"
               onClick={() => setShowLeaderboard(true)}
-              aria-label="Open Leaderboard"
+              aria-label="Open Online Leaderboard"
               className="p-2 rounded-xl text-stone-300 hover:text-white hover:bg-white/10 transition"
-              title="Leaderboard"
+              title="Global Online Leaderboard"
             >
               <Trophy className="w-4 h-4 text-amber-300" />
             </button>
@@ -193,6 +245,8 @@ export default function App() {
               round={activeRound}
               user={user}
               newBadgeId={newUnlockedBadgeId}
+              isBonusPuzzleEligible={bonusPuzzleEligible}
+              onPlayBonusPuzzle={handleStartBonusPuzzle}
               onPlayAgain={() => startRound(activeRound.regionId, activeRound.mode)}
               onGoHome={() => quitRound()}
               onOpenLeaderboard={() => setShowLeaderboard(true)}
@@ -254,6 +308,45 @@ export default function App() {
               </div>
             </div>
 
+            {/* Standalone Wildlife Bush Puzzles Banner */}
+            <div
+              id="bush-puzzles-home-card"
+              className="w-full bg-linear-to-r from-[#143622] via-[#1b4d31] to-[#24643f] rounded-2xl p-4 text-white shadow-md border border-emerald-600/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-amber-400 text-stone-950 shadow-md shrink-0">
+                  <PuzzleIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-amber-400/20">
+                      Interactive Puzzles
+                    </span>
+                    <span className="text-xs text-stone-300">
+                      {user.completedPuzzles?.length || 0} / {STARTER_PUZZLES.length} Mastered
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold font-display text-white mt-0.5">
+                    Wildlife Bush Puzzles & Memory Challenges
+                  </h3>
+                  <p className="text-xs text-stone-300 max-w-md mt-0.5">
+                    Test your photographic memory and visual acuity with Animal Match and Spot the Difference!
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                <button
+                  id="open-puzzles-hub-home-btn"
+                  onClick={() => setShowPuzzleHub(true)}
+                  className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-stone-950 font-bold text-xs shadow-md transition transform active:scale-98 flex items-center justify-center gap-1.5"
+                >
+                  <Brain className="w-4 h-4" />
+                  <span>Explore Puzzles ({STARTER_PUZZLES.length})</span>
+                </button>
+              </div>
+            </div>
+
             {/* Quick Player Status Strip */}
             <div className="w-full flex items-center justify-between bg-white rounded-xl p-3 border border-stone-200/90 shadow-xs text-xs">
               <div className="flex items-center gap-2">
@@ -272,7 +365,7 @@ export default function App() {
                     </button>
                   </div>
                   <span className="text-[11px] text-stone-500">
-                    {user.totalQuizzesPlayed} Expeditions Completed
+                    {user.totalQuizzesPlayed} Expeditions • {user.completedPuzzles?.length || 0} Puzzles
                   </span>
                 </div>
               </div>
@@ -291,7 +384,7 @@ export default function App() {
                     Badges
                   </span>
                   <span className="font-bold font-display text-sm text-[#1b4d31]">
-                    {user.unlockedBadges.length}/9
+                    {user.unlockedBadges.length}/12
                   </span>
                 </div>
               </div>
@@ -354,6 +447,34 @@ export default function App() {
       {/* Persistent Offline Status Indicator */}
       <OfflineIndicator />
 
+      {/* Active Puzzle Overlays */}
+      {activePuzzle && activePuzzle.type === 'memory-match' && (
+        <MemoryMatchGame
+          puzzle={activePuzzle}
+          onClose={exitPuzzle}
+          onNextPuzzle={handleNextPuzzle}
+        />
+      )}
+
+      {activePuzzle && activePuzzle.type === 'spot-difference' && (
+        <SpotDifferenceGame
+          puzzle={activePuzzle}
+          onClose={exitPuzzle}
+          onNextPuzzle={handleNextPuzzle}
+        />
+      )}
+
+      {/* Puzzle Hub Modal */}
+      {showPuzzleHub && (
+        <PuzzleHubModal
+          onSelectPuzzle={(puzzle) => {
+            setShowPuzzleHub(false);
+            startPuzzle(puzzle);
+          }}
+          onClose={() => setShowPuzzleHub(false)}
+        />
+      )}
+
       {/* Modals */}
       {showBadges && (
         <BadgeModal
@@ -364,7 +485,6 @@ export default function App() {
 
       {showLeaderboard && (
         <LeaderboardView
-          localEntries={localLeaderboard}
           currentUserId={user.uid}
           onClose={() => setShowLeaderboard(false)}
         />
@@ -381,3 +501,4 @@ export default function App() {
     </div>
   );
 }
+

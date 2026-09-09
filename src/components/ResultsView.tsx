@@ -15,11 +15,14 @@ import {
 import { QuizRoundState, UserProfile } from '../types';
 import { BADGES } from '../data/badges';
 import { REGIONS } from '../data/regions';
+import { Puzzle as PuzzleIcon } from 'lucide-react';
 
 interface ResultsViewProps {
   round: QuizRoundState;
   user: UserProfile;
   newBadgeId: string | null;
+  isBonusPuzzleEligible?: boolean;
+  onPlayBonusPuzzle?: () => void;
   onPlayAgain: () => void;
   onGoHome: () => void;
   onOpenLeaderboard: () => void;
@@ -29,6 +32,8 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
   round,
   user,
   newBadgeId,
+  isBonusPuzzleEligible,
+  onPlayBonusPuzzle,
   onPlayAgain,
   onGoHome,
   onOpenLeaderboard,
@@ -320,6 +325,39 @@ export const ResultsView: React.FC<ResultsViewProps> = ({
             </span>
           )}
         </div>
+
+        {/* Bonus Puzzle Round Banner */}
+        {isBonusPuzzleEligible && onPlayBonusPuzzle && (
+          <div className="w-full mt-4 p-4 rounded-2xl bg-linear-to-r from-amber-500 via-amber-400 to-emerald-600 text-stone-950 shadow-lg border border-amber-300 flex items-center justify-between gap-3 animate-in zoom-in-95 duration-300">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-stone-950 text-amber-300 shadow-md shrink-0">
+                <PuzzleIcon className="w-6 h-6" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-stone-950 text-amber-300 px-2 py-0.5 rounded-md">
+                    Bonus Round Unlocked!
+                  </span>
+                </div>
+                <h4 className="font-extrabold font-display text-sm text-stone-950 mt-0.5">
+                  Zambian Wildlife Bush Puzzle
+                </h4>
+                <p className="text-[11px] text-stone-900 font-medium">
+                  Earn up to +300 bonus points & unlock special ranger trophies!
+                </p>
+              </div>
+            </div>
+
+            <button
+              id="results-play-bonus-puzzle-btn"
+              onClick={onPlayBonusPuzzle}
+              className="px-4 py-2.5 rounded-xl bg-stone-950 hover:bg-stone-900 text-amber-300 font-black text-xs shadow-md transition shrink-0 active:scale-95 flex items-center gap-1"
+            >
+              <span>Play Bonus</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            </button>
+          </div>
+        )}
 
         {/* Navigation Actions */}
         <div className="w-full flex flex-col gap-2 mt-4">

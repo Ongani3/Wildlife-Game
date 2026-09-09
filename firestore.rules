@@ -45,6 +45,12 @@ service cloud.firestore {
       allow create, update, delete: if false; // Admin curated, client cannot mutate question bank directly
     }
 
+    // Puzzles validation: Public bank of wildlife puzzles can be read by anyone
+    match /puzzles/{puzzleId} {
+      allow get, list: if true; // Public read for all puzzle players
+      allow create, update, delete: if false; // Admin curated
+    }
+
     // Scores validation: Only authenticated users (anonymous or registered) can submit valid scores
     function isValidScore(data) {
       return data.userId == request.auth.uid &&
@@ -73,6 +79,7 @@ service cloud.firestore {
              data.highestStreak is number && data.highestStreak >= 0 &&
              data.unlockedBadges is list && data.unlockedBadges.size() <= 50 &&
              data.unlockedRegions is list && data.unlockedRegions.size() <= 10 &&
+             (!('completedPuzzles' in data) || (data.completedPuzzles is list && data.completedPuzzles.size() <= 100)) &&
              data.updatedAt == request.time;
     }
 

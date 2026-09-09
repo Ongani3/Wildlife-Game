@@ -5,22 +5,29 @@ import {
   QuizRoundState,
   RegionId,
   UserProfile,
-  LeaderboardEntry,
+  Puzzle,
 } from '../types';
 import { STARTER_QUESTIONS } from '../data/questions';
-import { BADGES } from '../data/badges';
 import { soundEngine } from '../lib/audio';
-import { submitScoreToFirestore } from '../lib/firebase';
+import {
+  submitScoreToFirestore,
+  saveCompletedPuzzleToFirestore,
+  syncUserProfileToFirestore,
+} from '../lib/firebase';
 
 interface QuizStore {
   // User profile & stats
   user: UserProfile;
   soundMuted: boolean;
-  localLeaderboard: LeaderboardEntry[];
   newUnlockedBadgeId: string | null;
 
   // Active quiz session
   activeRound: QuizRoundState | null;
+
+  // Puzzle system state
+  activePuzzle: Puzzle | null;
+  roundsSinceLastPuzzle: number;
+  bonusPuzzleEligible: boolean;
 
   // Store actions
   startRound: (regionId: RegionId, mode?: 'standard' | 'daily') => void;
@@ -31,7 +38,12 @@ interface QuizStore {
   setDisplayName: (name: string) => void;
   clearNewBadge: () => void;
   resetProgress: () => void;
-  addLocalScore: (entry: Omit<LeaderboardEntry, 'id'>) => void;
+
+  // Puzzle actions
+  startPuzzle: (puzzle: Puzzle) => void;
+  exitPuzzle: () => void;
+  completePuzzle: (puzzle: Puzzle, movesOrTaps: number, timeTakenSeconds: number) => { newBadgeId: string | null };
+  dismissBonusPuzzlePrompt: () => void;
 }
 
 const INITIAL_PROFILE: UserProfile = {
@@ -45,6 +57,7 @@ const INITIAL_PROFILE: UserProfile = {
   highestStreak: 0,
   unlockedRegions: ['south-luangwa', 'all-zambia'],
   unlockedBadges: [],
+  completedPuzzles: [],
 };
 
 // Seeded pseudorandom shuffle for deterministic Daily Challenges
@@ -75,37 +88,11 @@ export const useQuizStore = create<QuizStore>()(
     (set, get) => ({
       user: INITIAL_PROFILE,
       soundMuted: soundEngine.getMuted(),
-      localLeaderboard: [
-        {
-          id: 'mock-1',
-          userId: 'local-ranger',
-          displayName: 'Banda the Ranger',
-          score: 1850,
-          accuracy: 100,
-          region: 'south-luangwa',
-          date: 'Yesterday',
-        },
-        {
-          id: 'mock-2',
-          userId: 'local-scout',
-          displayName: 'Mfuwe Guide',
-          score: 1620,
-          accuracy: 90,
-          region: 'all-zambia',
-          date: '2 days ago',
-        },
-        {
-          id: 'mock-3',
-          userId: 'local-busanga',
-          displayName: 'Busanga Tracker',
-          score: 1480,
-          accuracy: 85,
-          region: 'kafue',
-          date: '3 days ago',
-        },
-      ],
       newUnlockedBadgeId: null,
       activeRound: null,
+      activePuzzle: null,
+      roundsSinceLastPuzzle: 0,
+      bonusPuzzleEligible: false,
 
       toggleSound: () => {
         const nextState = !get().soundMuted;
@@ -188,7 +175,7 @@ export const useQuizStore = create<QuizStore>()(
             score: 0,
             streak: 0,
             maxStreak: 0,
-            timeRemaining: 15,
+            timeRemaining: 25,
             totalTimeTaken: 0,
             questionStartTime: Date.now(),
             answersSummary: [],
@@ -206,7 +193,7 @@ export const useQuizStore = create<QuizStore>()(
         const currentQ = activeRound.questions[activeRound.currentIndex];
         const isCorrect = answer === currentQ.correctAnswer;
         const timeSpent = Math.max(1, Math.round((Date.now() - activeRound.questionStartTime) / 1000));
-        const timeRemaining = Math.max(0, 15 - timeSpent);
+        const timeRemaining = Math.max(0, 25 - timeSpent);
 
         // Sound effect
         if (isCorrect) {
@@ -217,7 +204,7 @@ export const useQuizStore = create<QuizStore>()(
 
         // Scoring algorithm:
         // Base points: 100
-        // Speed bonus: up to 100 (10 points per second remaining)
+        // Speed bonus: up to 125 (5 points per second remaining over 25s)
         // Streak multiplier: 1x, 1.1x, 1.2x... capped at 2.0x
         let pointsEarned = 0;
         let newStreak = isCorrect ? activeRound.streak + 1 : 0;
@@ -225,7 +212,7 @@ export const useQuizStore = create<QuizStore>()(
 
         if (isCorrect) {
           const streakMultiplier = 1 + Math.min(newStreak, 10) * 0.1;
-          const speedBonus = timeRemaining * 8;
+          const speedBonus = timeRemaining * 5;
           pointsEarned = Math.round((100 + speedBonus) * streakMultiplier);
 
           if (newStreak >= 3) {
@@ -284,7 +271,7 @@ export const useQuizStore = create<QuizStore>()(
       },
 
       nextQuestion: () => {
-        const { activeRound, user, addLocalScore } = get();
+        const { activeRound, user } = get();
         if (!activeRound) return;
 
         const nextIndex = activeRound.currentIndex + 1;
@@ -329,18 +316,7 @@ export const useQuizStore = create<QuizStore>()(
           unlockedRegions.add('lower-zambezi');
           unlockedRegions.add('victoria-falls');
 
-          // Save score to local leaderboard
-          addLocalScore({
-            userId: user.uid,
-            displayName: user.displayName,
-            score: activeRound.score,
-            accuracy,
-            region: activeRound.regionId,
-            date: 'Today',
-            isDaily: activeRound.mode === 'daily',
-          });
-
-          // Submit to Firestore if online
+          // Submit directly to Firestore for the online global leaderboard
           submitScoreToFirestore({
             userId: user.uid,
             displayName: user.displayName,
@@ -349,21 +325,32 @@ export const useQuizStore = create<QuizStore>()(
             region: activeRound.regionId,
             isDaily: activeRound.mode === 'daily',
           }).catch((e) => {
-            console.warn('Silent local score fallback active:', e);
+            console.warn('Firestore score submission notice:', e);
           });
 
           const todayDateStr = new Date().toISOString().split('T')[0];
+          const newRoundsCount = get().roundsSinceLastPuzzle + 1;
+          const isEligibleForBonus = newRoundsCount >= 2;
+
+          const updatedUser: UserProfile = {
+            ...user,
+            totalQuizzesPlayed: user.totalQuizzesPlayed + 1,
+            highestScore: Math.max(user.highestScore, activeRound.score),
+            unlockedBadges: Array.from(currentBadges),
+            unlockedRegions: Array.from(unlockedRegions),
+            lastDailyCompletedDate:
+              activeRound.mode === 'daily' ? todayDateStr : user.lastDailyCompletedDate,
+          };
+
+          // Sync user stats to Firestore
+          syncUserProfileToFirestore(updatedUser).catch((e) => {
+            console.warn('Firestore profile sync notice:', e);
+          });
 
           set({
-            user: {
-              ...user,
-              totalQuizzesPlayed: user.totalQuizzesPlayed + 1,
-              highestScore: Math.max(user.highestScore, activeRound.score),
-              unlockedBadges: Array.from(currentBadges),
-              unlockedRegions: Array.from(unlockedRegions),
-              lastDailyCompletedDate:
-                activeRound.mode === 'daily' ? todayDateStr : user.lastDailyCompletedDate,
-            },
+            user: updatedUser,
+            roundsSinceLastPuzzle: newRoundsCount,
+            bonusPuzzleEligible: isEligibleForBonus,
             activeRound: {
               ...activeRound,
               isComplete: true,
@@ -377,7 +364,7 @@ export const useQuizStore = create<QuizStore>()(
               selectedAnswer: null,
               isAnswered: false,
               isCorrect: null,
-              timeRemaining: 15,
+              timeRemaining: 25,
               questionStartTime: Date.now(),
             },
           });
@@ -388,17 +375,76 @@ export const useQuizStore = create<QuizStore>()(
         set({ activeRound: null });
       },
 
-      addLocalScore: (entry) => {
-        const newEntry: LeaderboardEntry = {
-          ...entry,
-          id: 'score_' + Date.now(),
+      startPuzzle: (puzzle: Puzzle) => {
+        set({ activePuzzle: puzzle });
+      },
+
+      exitPuzzle: () => {
+        set({ activePuzzle: null });
+      },
+
+      dismissBonusPuzzlePrompt: () => {
+        set({ bonusPuzzleEligible: false });
+      },
+
+      completePuzzle: (puzzle: Puzzle, movesOrTaps: number, timeTakenSeconds: number) => {
+        const { user } = get();
+        soundEngine.playFanfare();
+
+        const completedSet = new Set(user.completedPuzzles || []);
+        const badgesSet = new Set(user.unlockedBadges || []);
+        let newBadgeId: string | null = null;
+
+        completedSet.add(puzzle.id);
+
+        // Check specific puzzle badge rewards
+        if (puzzle.type === 'spot-difference' && !badgesSet.has('sharp-eyes')) {
+          badgesSet.add('sharp-eyes');
+          newBadgeId = 'sharp-eyes';
+        } else if (puzzle.type === 'memory-match' && !badgesSet.has('memory-master')) {
+          badgesSet.add('memory-master');
+          newBadgeId = 'memory-master';
+        }
+
+        // Check 3 puzzles milestone badge
+        if (completedSet.size >= 3 && !badgesSet.has('luangwa-pathfinder')) {
+          badgesSet.add('luangwa-pathfinder');
+          if (!newBadgeId) newBadgeId = 'luangwa-pathfinder';
+        }
+
+        // Calculate puzzle score bonus
+        const baseBonus = puzzle.bonusPoints || 200;
+        const speedBonus = Math.max(0, 100 - Math.floor(timeTakenSeconds * 2));
+        const efficiencyBonus = Math.max(0, 50 - movesOrTaps * 2);
+        const totalEarned = baseBonus + speedBonus + efficiencyBonus;
+
+        const updatedUser: UserProfile = {
+          ...user,
+          highestScore: user.highestScore + totalEarned,
+          unlockedBadges: Array.from(badgesSet),
+          completedPuzzles: Array.from(completedSet),
         };
-        set((state) => {
-          const updated = [newEntry, ...state.localLeaderboard]
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 30);
-          return { localLeaderboard: updated };
+
+        // Submit to online Firestore
+        saveCompletedPuzzleToFirestore(user.uid, puzzle.id);
+        syncUserProfileToFirestore(updatedUser);
+        submitScoreToFirestore({
+          userId: user.uid,
+          displayName: user.displayName,
+          score: totalEarned,
+          accuracy: 100,
+          region: puzzle.parkRegion,
+          isDaily: false,
+        }).catch((e) => console.warn('Puzzle score sync warning:', e));
+
+        set({
+          user: updatedUser,
+          newUnlockedBadgeId: newBadgeId || get().newUnlockedBadgeId,
+          roundsSinceLastPuzzle: 0,
+          bonusPuzzleEligible: false,
         });
+
+        return { newBadgeId };
       },
 
       resetProgress: () => {
@@ -409,7 +455,10 @@ export const useQuizStore = create<QuizStore>()(
             uid: 'player_' + Math.random().toString(36).substring(2, 9),
           },
           activeRound: null,
+          activePuzzle: null,
           newUnlockedBadgeId: null,
+          roundsSinceLastPuzzle: 0,
+          bonusPuzzleEligible: false,
         });
       },
     }),
@@ -417,7 +466,6 @@ export const useQuizStore = create<QuizStore>()(
       name: 'luangwa_safari_store',
       partialize: (state) => ({
         user: state.user,
-        localLeaderboard: state.localLeaderboard,
         soundMuted: state.soundMuted,
       }),
     }

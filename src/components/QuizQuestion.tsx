@@ -42,12 +42,12 @@ export const QuizQuestion: React.FC<QuizQuestionProps> = ({
   onNextQuestion,
   onQuit,
 }) => {
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(25);
   const [isPhotoExpanded, setIsPhotoExpanded] = useState(false);
 
   // Timer countdown
   useEffect(() => {
-    setTimeLeft(15);
+    setTimeLeft(25);
   }, [question.id]);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export const QuizQuestion: React.FC<QuizQuestionProps> = ({
   }, [timeLeft, isAnswered, onSelectAnswer]);
 
   const progressPercent = ((currentIndex + 1) / totalQuestions) * 100;
-  const timerPercent = (timeLeft / 15) * 100;
+  const timerPercent = (timeLeft / 25) * 100;
 
   return (
     <div
@@ -136,7 +136,7 @@ export const QuizQuestion: React.FC<QuizQuestionProps> = ({
           <div className="w-full h-1 bg-stone-100 rounded-full overflow-hidden mb-3">
             <div
               className={`h-full transition-all duration-1000 linear ${
-                timeLeft <= 5 ? 'bg-red-500' : timeLeft <= 8 ? 'bg-amber-500' : 'bg-emerald-600'
+                timeLeft <= 5 ? 'bg-red-500' : timeLeft <= 10 ? 'bg-amber-500' : 'bg-emerald-600'
               }`}
               style={{ width: `${timerPercent}%` }}
             />

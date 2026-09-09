@@ -14,6 +14,9 @@ import {
   Flame,
   Sun,
   Trophy,
+  Eye,
+  Brain,
+  Footprints,
 } from 'lucide-react';
 
 interface BadgeModalProps {
@@ -32,6 +35,9 @@ const BADGE_ICONS: Record<string, React.ElementType> = {
   Flame,
   Sun,
   Trophy,
+  Eye,
+  Brain,
+  Footprints,
 };
 
 export const BadgeModal: React.FC<BadgeModalProps> = ({ unlockedBadgeIds, onClose }) => {
